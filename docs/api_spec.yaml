@@ -1,0 +1,181 @@
+openapi: 3.0.0
+info:
+  title: Distributed Sync System API
+  version: 1.0.0
+  description: Public API for interacting with the Distributed Synchronization System
+servers:
+  - url: http://localhost:5000
+    description: Local development server
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-Auth-Token
+      description: Token used to authenticate API requests between clients and nodes
+security:
+  - ApiKeyAuth: []
+paths:
+  /api/lock/acquire:
+    post:
+      summary: Acquire a distributed lock
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                lock_id:
+                  type: string
+                owner:
+                  type: string
+                type:
+                  type: string
+                  enum: [exclusive, shared]
+      responses:
+        '200':
+          description: Lock acquisition result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+
+  /api/lock/release:
+    post:
+      summary: Release a distributed lock
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                lock_id:
+                  type: string
+                owner:
+                  type: string
+                type:
+                  type: string
+                  enum: [exclusive, shared]
+      responses:
+        '200':
+          description: Lock release result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+
+  /api/queue/enqueue:
+    post:
+      summary: Push a message to a queue topic
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                topic:
+                  type: string
+                message:
+                  type: object
+      responses:
+        '200':
+          description: Enqueue result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+
+  /api/queue/dequeue:
+    get:
+      summary: Pop a message from a queue topic
+      parameters:
+        - in: query
+          name: topic
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A message from the queue
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: object
+                    nullable: true
+
+  /api/cache/put:
+    post:
+      summary: Set a key-value in distributed cache
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                key:
+                  type: string
+                value:
+                  type: string
+      responses:
+        '200':
+          description: Cache put success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+
+  /api/cache/get:
+    get:
+      summary: Get a value from the distributed cache
+      parameters:
+        - in: query
+          name: key
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The cached value
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    type: string
+                    nullable: true
+
+  /api/metrics:
+    get:
+      summary: Fetch node metrics and region info
+      responses:
+        '200':
+          description: Node metrics mapping
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  region:
+                    type: string
+                  metrics:
+                    type: object

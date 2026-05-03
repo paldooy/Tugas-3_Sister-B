@@ -1,0 +1,86 @@
+services:
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  node1:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.node
+    environment:
+      - NODE_ID=node1
+      - REGION=us-east
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - CACHE_CAPACITY=${CACHE_CAPACITY:-1000}
+      - NODE_CERT_FINGERPRINT=node1-cert
+      - ALLOWED_NODE_CERTS=${ALLOWED_NODE_CERTS:-node1:node1-cert,node2:node2-cert,node3:node3-cert}
+      - PEERS=node2:5000,node3:5000
+    ports:
+      - "${NODE1_PORT:-5001}:5000"
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  node2:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.node
+    environment:
+      - NODE_ID=node2
+      - REGION=eu-west
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - CACHE_CAPACITY=${CACHE_CAPACITY:-1000}
+      - NODE_CERT_FINGERPRINT=node2-cert
+      - ALLOWED_NODE_CERTS=${ALLOWED_NODE_CERTS:-node1:node1-cert,node2:node2-cert,node3:node3-cert}
+      - PEERS=node1:5000,node3:5000
+    ports:
+      - "${NODE2_PORT:-5002}:5000"
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  node3:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.node
+    environment:
+      - NODE_ID=node3
+      - REGION=ap-south
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - CACHE_CAPACITY=${CACHE_CAPACITY:-1000}
+      - NODE_CERT_FINGERPRINT=node3-cert
+      - ALLOWED_NODE_CERTS=${ALLOWED_NODE_CERTS:-node1:node1-cert,node2:node2-cert,node3:node3-cert}
+      - PEERS=node1:5000,node2:5000
+    ports:
+      - "${NODE3_PORT:-5003}:5000"
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
